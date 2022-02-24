@@ -1,3 +1,12 @@
+# Note
+This source is forked from https://github.com/aws-samples/amazon-chime-sdk to easily integrate with upstream quality changes.
+
+In this forked repository, you can find the modification and also added documentation in the [meeting demo application](https://github.com/hendryanw/amazon-chime-sdk-react-with-auth/tree/main/apps/meeting)
+The modification allows the sample React Meeting Application to:
+1. Allow Meeting ID and Username to be supplied by the referral application using Querystrings `meetingid` and `username`
+2. Deployed into AWS Serverless with additional integration with API Gateway Lambda Authorizer to implement authorization with token stored in DynamoDB
+3. Allow the meeting to be recorded using Media Capture Pipeline (TODO)
+
 ## Amazon Chime SDK Samples
 
 The Amazon Chime SDK is a set of real-time communications components that developers can use to quickly add messaging, audio, video, and screen sharing capabilities to their web or mobile applications. Developers can leverage the same communication infrastructure and services that power Amazon Chime, an online meetings service from AWS, and deliver engaging experiences in their applications.
