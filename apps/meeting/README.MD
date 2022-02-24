@@ -22,15 +22,12 @@ The following is the high-level architecture diagram that highlights the modific
 
 1. Users authenticate with main web app and access the web page for the meeting
 2. The main web app creates the meeting link with the necessary information such as users, meeting id, and authorization token in the query strings. The authorization token is stored in DynamoDB along with other information such as meeting id, roles, validity time, etc as per business requirements.
-3. Users clicked on the button that contains hyperlink e.g. meeting.example.com?meetingid=1234&username=john&token=abcdefg
+3. Users clicked on the button that contains hyperlink e.g. `meeting.example.com?meetingid=1234&username=john&token=abcdefg`
 4. Users is pointed to the meeting service at meeting.example.com. The request is accepted by API Gateway
-5. API Gateway accepted the request and then invoked Lambda Authorizer to verify the token.
-Lambda Authorizer logic can be customized to verify whether the token exists in the Authorization Token Table
+5. API Gateway accepted the request and then invoked Lambda Authorizer to verify the token. Lambda Authorizer logic can be customized to verify whether the token exists in the Authorization Token Table.
 And also verify whether the token is still valid within the time period, etc.
-6. Lambda Function Index Page returns the initial 
-response containing the React application
-7. React Application will call various API in the 
-meeting service such as create meeting, join, end, etc.
+6. Lambda Function Index Page returns the initial response containing the React application
+7. React Application will call various API in the meeting service such as create meeting, join, end, etc.
 
 ### Install aws and sam command line tools
 
@@ -180,7 +177,11 @@ Please refer to this documentation: https://docs.aws.amazon.com/apigateway/lates
 TODO
 
 ## Setting up Custom Domain for API Gateway
-TODO
+You can read more on how custom domain works on API Gateway here: https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html
+
+To setup the custom domain for the API Gateway, follow the steps outlined in the documentation below.
+1. [Getting certificates ready in AWS Certificate Manager](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains-prerequisites.html)
+2. [Creating an edge-optimized custom domain name](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-edge-optimized-custom-domain-name.html)
 
 ## Testing the authorization workflow using a sample website
 TODO
