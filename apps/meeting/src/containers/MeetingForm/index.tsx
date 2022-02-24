@@ -1,7 +1,7 @@
 // Copyright 2020-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import React, {ChangeEvent, useContext, useState} from 'react';
+import React, {ChangeEvent, useContext, useState, useEffect} from 'react';
 import {useHistory} from 'react-router-dom';
 import {
   Checkbox,
@@ -9,7 +9,7 @@ import {
   Flex,
   FormField,
   Heading,
-  Input,
+  // Input,
   Modal,
   ModalBody,
   ModalHeader,
@@ -29,6 +29,11 @@ import {createGetAttendeeCallback, fetchMeeting} from '../../utils/api';
 import {useAppState} from '../../providers/AppStateProvider';
 import {MeetingMode, VideoFiltersCpuUtilization} from '../../types';
 import meetingConfig from '../../meetingConfig';
+
+const search = window.location.search;
+const params = new URLSearchParams(search);
+const meetingidQs = params.get('meetingid');
+const usernameQs = params.get('username');
 
 const VIDEO_TRANSFORM_FILTER_OPTIONS = [
   { value: VideoFiltersCpuUtilization.Disabled, label: 'Disable Video Filter' }, 
@@ -62,8 +67,8 @@ const MeetingForm: React.FC = () => {
     setRegion,
     setCpuUtilization,
   } = useAppState();
-  const [meetingErr, setMeetingErr] = useState(false);
-  const [nameErr, setNameErr] = useState(false);
+  // const [meetingErr, setMeetingErr] = useState(false);
+  // const [nameErr, setNameErr] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { errorMessage, updateErrorMessage } = useContext(getErrorContext());
   const history = useHistory();
@@ -76,11 +81,11 @@ const MeetingForm: React.FC = () => {
 
     if (!id || !attendeeName) {
       if (!attendeeName) {
-        setNameErr(true);
+        updateErrorMessage('Invalid Username. Please join from the course page again.');
       }
 
       if (!id) {
-        setMeetingErr(true);
+        updateErrorMessage('Invalid Meeting Id. Please join from the course page again.');
       }
 
       return;
@@ -127,19 +132,43 @@ const MeetingForm: React.FC = () => {
     setIsLoading(false);
   };
 
+  useEffect(() => {
+    if (!meetingidQs || !usernameQs) {
+      if (!usernameQs) {
+        updateErrorMessage('Invalid Username. Please join from the course page again.');
+      }
+
+      if (!meetingidQs) {
+        updateErrorMessage('Invalid Meeting Id. Please join from the course page again.');
+      }
+
+      return;
+    }
+
+    setMeetingId(meetingidQs!);
+    setLocalUserName(usernameQs!);
+  }, []);
+
   return (
     <form>
+      Test123
       <Heading tag="h1" level={4} css="margin-bottom: 1rem">
         Join a meeting
       </Heading>
-      <FormField
+      <Heading tag="h1" level={6}>
+        Meeting Id: {meetingId}
+      </Heading>
+      <Heading tag="h1" level={6} css="margin-bottom: 1rem">
+        Username: {localUserName}
+      </Heading>
+      {/* <FormField
         field={Input}
         label="Meeting Id"
         value={meetingId}
         infoText="Anyone with access to the meeting ID can join"
         fieldProps={{
           name: 'meetingId',
-          placeholder: 'Enter Meeting Id',
+          placeholder: 'Enter Meeting Id'
         }}
         errorText="Please enter a valid meeting ID"
         error={meetingErr}
@@ -166,7 +195,7 @@ const MeetingForm: React.FC = () => {
             setNameErr(false);
           }
         }}
-      />
+      /> */}
       <RegionSelection setRegion={setRegion} region={region} />
       <FormField
         field={Checkbox}
@@ -251,7 +280,7 @@ const MeetingForm: React.FC = () => {
       </Flex>
       {errorMessage && (
         <Modal size="md" onClose={closeError}>
-          <ModalHeader title={`Meeting ID: ${meetingId}`} />
+          <ModalHeader title={`Meeting ID: ${meetingidQs}`} />
           <ModalBody>
             <Card
               title="Unable to join meeting"
