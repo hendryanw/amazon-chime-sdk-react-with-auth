@@ -121,7 +121,14 @@ To create a request-based Lambda authorizer function, enter the following Node.j
                     callback("Unauthorized");    
                 } else {
                     console.log("GetItem succeeded:", JSON.stringify(data, null, 2));
-                    callback(null, generateAllow('me', event.methodArn));  
+                    if (Object.keys(data).length === 0)
+                    {
+                        console.error("item is empty");
+                        callback("Unauthorized");        
+                    }
+                    else {
+                        callback(null, generateAllow('me', event.methodArn));      
+                    }
                 }
             })
         }  else {
