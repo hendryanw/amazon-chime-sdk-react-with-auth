@@ -14,6 +14,7 @@ type Props = {
 interface AppStateValue {
   meetingId: string;
   localUserName: string;
+  token: string;
   theme: string;
   region: string;
   isWebAudioEnabled: boolean;
@@ -38,6 +39,7 @@ interface AppStateValue {
   setLayout: React.Dispatch<React.SetStateAction<Layout>>;
   setMeetingId: React.Dispatch<React.SetStateAction<string>>;
   setLocalUserName: React.Dispatch<React.SetStateAction<string>>;
+  setToken: React.Dispatch<React.SetStateAction<string>>;
   setRegion: React.Dispatch<React.SetStateAction<string>>;
   setBlob: (imageBlob: Blob) => void;
 }
@@ -60,12 +62,13 @@ const query = new URLSearchParams(location.search);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function AppStateProvider({ children }: Props) {
-  const [meetingId, setMeetingId] = useState(query.get('meetingId') || '');
+  const [meetingId, setMeetingId] = useState(query.get('meetingid') || '');
   const [region, setRegion] = useState(query.get('region') || '');
+  const [token, setToken] = useState(query.get('token') || '');
   const [meetingMode, setMeetingMode] = useState(MeetingMode.Attendee);
   const [joinInfo, setJoinInfo] = useState<JoinMeetingInfo | undefined>(undefined);
   const [layout, setLayout] = useState(Layout.Gallery);
-  const [localUserName, setLocalUserName] = useState('');
+  const [localUserName, setLocalUserName] = useState(query.get('username') || '');
   const [isWebAudioEnabled, setIsWebAudioEnabled] = useState(true);
   const [priorityBasedPolicy, setPriorityBasedPolicy] = useState<VideoPriorityBasedPolicy| undefined>(undefined);
   const [enableSimulcast, setEnableSimulcast] = useState(false);
@@ -147,6 +150,7 @@ export function AppStateProvider({ children }: Props) {
   const providerValue = {
     meetingId,
     localUserName,
+    token,
     theme,
     isWebAudioEnabled,
     videoTransformCpuUtilization,
@@ -170,6 +174,7 @@ export function AppStateProvider({ children }: Props) {
     setLayout,
     setJoinInfo,
     setMeetingId,
+    setToken,
     setLocalUserName,
     setRegion,
     setBlob,

@@ -29,6 +29,7 @@ interface GetAttendeeResponse {
 export async function fetchMeeting(
   meetingId: string,
   name: string,
+  token: string,
   region: string,
   echoReductionCapability = false
 ): Promise<MeetingResponse> {
@@ -41,6 +42,9 @@ export async function fetchMeeting(
 
   const res = await fetch(BASE_URL + 'join?' + new URLSearchParams(params), {
     method: 'POST',
+    headers: {
+      'X-AUTH-TOKEN': token,
+    },
   });
 
   const data = await res.json();

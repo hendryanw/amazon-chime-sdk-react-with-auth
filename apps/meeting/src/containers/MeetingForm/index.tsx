@@ -30,11 +30,6 @@ import {useAppState} from '../../providers/AppStateProvider';
 import {MeetingMode, VideoFiltersCpuUtilization} from '../../types';
 import meetingConfig from '../../meetingConfig';
 
-const search = window.location.search;
-const params = new URLSearchParams(search);
-const meetingidQs = params.get('meetingid');
-const usernameQs = params.get('username');
-
 const VIDEO_TRANSFORM_FILTER_OPTIONS = [
   { value: VideoFiltersCpuUtilization.Disabled, label: 'Disable Video Filter' }, 
   { value: VideoFiltersCpuUtilization.CPU10Percent, label: 'Video Filter CPU 10%' }, 
@@ -47,6 +42,7 @@ const MeetingForm: React.FC = () => {
   const {
     region,
     meetingId,
+    token,
     localUserName,
     meetingMode,
     enableSimulcast,
@@ -64,6 +60,7 @@ const MeetingForm: React.FC = () => {
     setMeetingMode,
     setMeetingId,
     setLocalUserName,
+    setToken,
     setRegion,
     setCpuUtilization,
   } = useAppState();
@@ -95,7 +92,7 @@ const MeetingForm: React.FC = () => {
     meetingManager.getAttendee = createGetAttendeeCallback(id);
 
     try {
-      const { JoinInfo } = await fetchMeeting(id, attendeeName, region, isEchoReductionEnabled);
+      const { JoinInfo } = await fetchMeeting(id, attendeeName, token, region, isEchoReductionEnabled);
       setJoinInfo(JoinInfo);
 
       await meetingManager.join({
@@ -128,30 +125,27 @@ const MeetingForm: React.FC = () => {
   const closeError = (): void => {
     updateErrorMessage('');
     setMeetingId('');
+    setToken('');
     setLocalUserName('');
     setIsLoading(false);
   };
 
   useEffect(() => {
-    if (!meetingidQs || !usernameQs) {
-      if (!usernameQs) {
+    if (!meetingId || !localUserName) {
+      if (!localUserName) {
         updateErrorMessage('Invalid Username. Please join from the course page again.');
       }
 
-      if (!meetingidQs) {
+      if (!meetingId) {
         updateErrorMessage('Invalid Meeting Id. Please join from the course page again.');
       }
 
       return;
     }
-
-    setMeetingId(meetingidQs!);
-    setLocalUserName(usernameQs!);
   }, []);
 
   return (
     <form>
-      Test123
       <Heading tag="h1" level={4} css="margin-bottom: 1rem">
         Join a meeting
       </Heading>
@@ -280,7 +274,7 @@ const MeetingForm: React.FC = () => {
       </Flex>
       {errorMessage && (
         <Modal size="md" onClose={closeError}>
-          <ModalHeader title={`Meeting ID: ${meetingidQs}`} />
+          <ModalHeader title={`Meeting ID: ${meetingId}`} />
           <ModalBody>
             <Card
               title="Unable to join meeting"

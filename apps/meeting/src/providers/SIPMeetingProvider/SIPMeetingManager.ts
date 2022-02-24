@@ -16,12 +16,14 @@ export class SIPMeetingManager {
 
   getSIPURI = async (
     meetingId: string,
-    voiceConnectorId: string
+    voiceConnectorId: string,
+    token: string
   ): Promise<string> => {
     try {
       this.meetingData = await fetchMeeting(
         meetingId,
         AMAZON_CHIME_VOICE_CONNECTOR_PHONE_NUMDER,
+        token,
         this.region
       );
       const joinToken = this.meetingData.JoinInfo.Attendee.JoinToken;
