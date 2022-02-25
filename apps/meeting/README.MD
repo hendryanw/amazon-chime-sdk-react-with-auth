@@ -224,7 +224,7 @@ To create a token-based Lambda authorizer function, enter the following Node.js 
                         callback("Unauthorized");        
                     }
                     else {
-                        callback(null, generatePolicy('user', 'Allow', event.methodArn));
+                        callback(null, generatePolicy('user', 'Allow', '*'));
                     }
                 }
             })
