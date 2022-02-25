@@ -181,6 +181,92 @@ You'll need to configure the API Gateway deployed in the earlier deployment scri
 Please refer to this documentation: https://docs.aws.amazon.com/apigateway/latest/developerguide/configure-api-gateway-lambda-authorization-with-console.html
 
 ### Deploy and Configure Lambda Authorizer for TOKEN authorizer
+
+The following are the steps to create the Lambda Function for the TOKEN authorizer.
+
+To create a token-based Lambda authorizer function, enter the following Node.js code in the Lambda console and test it in the API Gateway console as follows.
+
+1. In the Lambda console, choose Create function.
+
+2. Choose Author from scratch.
+
+3. Enter a name for the function.
+
+4. Choose Create function.
+
+5. Copy/paste the following code into the code editor.
+    ````
+    // A simple token-based authorizer example to demonstrate how to use an authorization token 
+    // to allow or deny a request. 
+
+    var AWS = require("aws-sdk");
+    var docClient = new AWS.DynamoDB.DocumentClient();
+    var table = "auth-token";
+
+    exports.handler =  function(event, context, callback) {
+        var token = event.authorizationToken;
+        
+        if (token) {
+            docClient.get({
+                TableName: table,
+                Key: {
+                    "token": token
+                }
+            }, function(err, data) {
+                if (err) {
+                    console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
+                    callback("Unauthorized");  
+                } else {
+                    console.log("GetItem succeeded:", JSON.stringify(data, null, 2));
+                    if (Object.keys(data).length === 0)
+                    {
+                        console.error("item is empty");
+                        callback("Unauthorized");        
+                    }
+                    else {
+                        callback(null, generatePolicy('user', 'Allow', event.methodArn));
+                    }
+                }
+            })
+        } else {
+            callback("Unauthorized");
+        }
+    };
+
+    // Help function to generate an IAM policy
+    var generatePolicy = function(principalId, effect, resource) {
+        var authResponse = {};
+        
+        authResponse.principalId = principalId;
+        if (effect && resource) {
+            var policyDocument = {};
+            policyDocument.Version = '2012-10-17'; 
+            policyDocument.Statement = [];
+            var statementOne = {};
+            statementOne.Action = 'execute-api:Invoke'; 
+            statementOne.Effect = effect;
+            statementOne.Resource = resource;
+            policyDocument.Statement[0] = statementOne;
+            authResponse.policyDocument = policyDocument;
+        }
+        
+        // Optional output with custom properties of the String, Number or Boolean type.
+        authResponse.context = {
+            "stringKey": "stringval",
+            "numberKey": 123,
+            "booleanKey": true
+        };
+        return authResponse;
+    }
+    ````
+
+6. Choose Deploy.
+
+7. Modify the IAM permission of the Lambda Execution Role to allow it to access the Authorization Token Table in DynamoDB. You'll only need `dynamodb:GetItem` permission for this. Refer to this documentation for more information: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_lambda-access-dynamodb.html
+
+In the example above, the Lambda authorizer function checks the `authorizationToken` supplied by the API Gateway when it call the TOKEN Lambda Authorizer and verify it by checking if the item exists in `auth-token` table in DynamoDB.
+
+### Configure TOKEN Lambda Authorizer using the API Gateway Console
 TODO
 
 ## Setting up Custom Domain for API Gateway
