@@ -176,9 +176,11 @@ To create a request-based Lambda authorizer function, enter the following Node.j
 In the example above, the Lambda authorizer function checks the querystrings for `token` and verify it by checking if the item exists in `auth-token` table in DynamoDB.
 
 ### Configure REQUEST Lambda Authorizer using the API Gateway Console
-You'll need to configure the API Gateway deployed in the earlier deployment script, and assign the REQUEST Lambda Authorizer to the `GET /` resource method.
+You'll need to configure the API Gateway deployed in the earlier deployment script, and assign the REQUEST Lambda Authorizer to the `GET /` and `GET /{proxy+}` resource method.
 
 Please refer to this documentation: https://docs.aws.amazon.com/apigateway/latest/developerguide/configure-api-gateway-lambda-authorization-with-console.html
+
+When you are done, you can deploy the changes to an API Gateway Stage (e.g. Prod). Please refer to this documentation: https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-deploy-api-with-console.html#how-to-deploy-api-console
 
 ### Deploy and Configure Lambda Authorizer for TOKEN authorizer
 
@@ -267,7 +269,11 @@ To create a token-based Lambda authorizer function, enter the following Node.js 
 In the example above, the Lambda authorizer function checks the `authorizationToken` supplied by the API Gateway when it call the TOKEN Lambda Authorizer and verify it by checking if the item exists in `auth-token` table in DynamoDB.
 
 ### Configure TOKEN Lambda Authorizer using the API Gateway Console
-TODO
+You'll need to configure the API Gateway deployed in the earlier deployment script, and assign the TOKEN Lambda Authorizer to the `GET /attendee`, `POST /end`, `POST /join`, `POST /logs`, and `POST /meeting` resource method.
+
+Please refer to this documentation: https://docs.aws.amazon.com/apigateway/latest/developerguide/configure-api-gateway-lambda-authorization-with-console.html
+
+When you are done, you can deploy the changes to an API Gateway Stage (e.g. Prod). Please refer to this documentation: https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-deploy-api-with-console.html#how-to-deploy-api-console
 
 ## Setting up Custom Domain for API Gateway
 You can read more on how custom domain works on API Gateway here: https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html
