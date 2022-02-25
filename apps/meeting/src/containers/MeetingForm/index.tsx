@@ -89,7 +89,7 @@ const MeetingForm: React.FC = () => {
     }
 
     setIsLoading(true);
-    meetingManager.getAttendee = createGetAttendeeCallback(id);
+    meetingManager.getAttendee = createGetAttendeeCallback(id, token);
 
     try {
       const { JoinInfo } = await fetchMeeting(id, attendeeName, token, region, isEchoReductionEnabled);
@@ -124,9 +124,9 @@ const MeetingForm: React.FC = () => {
 
   const closeError = (): void => {
     updateErrorMessage('');
-    setMeetingId('');
-    setToken('');
-    setLocalUserName('');
+    setMeetingId(meetingId);
+    setToken(token);
+    setLocalUserName(localUserName);
     setIsLoading(false);
   };
 

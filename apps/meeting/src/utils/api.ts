@@ -44,7 +44,7 @@ export async function fetchMeeting(
     method: 'POST',
     headers: {
       'X-AUTH-TOKEN': token,
-    },
+    }
   });
 
   const data = await res.json();
@@ -58,7 +58,8 @@ export async function fetchMeeting(
 
 export async function getAttendee(
   meetingId: string,
-  chimeAttendeeId: string
+  chimeAttendeeId: string,
+  token: string
 ): Promise<GetAttendeeResponse> {
   const params = {
     title: encodeURIComponent(meetingId),
@@ -67,6 +68,9 @@ export async function getAttendee(
 
   const res = await fetch(BASE_URL + 'attendee?' + new URLSearchParams(params), {
     method: 'GET',
+    headers: {
+      'X-AUTH-TOKEN': token,
+    }
   });
 
   if (!res.ok) {
@@ -80,13 +84,16 @@ export async function getAttendee(
   };
 }
 
-export async function endMeeting(meetingId: string): Promise<void> {
+export async function endMeeting(meetingId: string, token: string): Promise<void> {
   const params = {
     title: encodeURIComponent(meetingId),
   };
 
   const res = await fetch(BASE_URL + 'end?' + new URLSearchParams(params), {
     method: 'POST',
+    headers: {
+      'X-AUTH-TOKEN': token,
+    }
   });
 
   if (!res.ok) {
@@ -94,6 +101,6 @@ export async function endMeeting(meetingId: string): Promise<void> {
   }
 }
 
-export const createGetAttendeeCallback = (meetingId: string) =>
+export const createGetAttendeeCallback = (meetingId: string, token: string) =>
   (chimeAttendeeId: string): Promise<GetAttendeeResponse> =>
-    getAttendee(meetingId, chimeAttendeeId);
+    getAttendee(meetingId, chimeAttendeeId, token);

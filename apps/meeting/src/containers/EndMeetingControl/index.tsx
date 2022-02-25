@@ -21,7 +21,7 @@ import routes from '../../constants/routes';
 const EndMeetingControl: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const toggleModal = (): void => setShowModal(!showModal);
-  const { meetingId } = useAppState();
+  const { meetingId, token } = useAppState();
   const history = useHistory();
 
   const leaveMeeting = async (): Promise<void> => {
@@ -31,7 +31,7 @@ const EndMeetingControl: React.FC = () => {
   const endMeetingForAll = async (): Promise<void> => {
     try {
       if (meetingId) {
-        await endMeeting(meetingId);
+        await endMeeting(meetingId, token);
         history.push(routes.HOME);
       }
     } catch (e) {
