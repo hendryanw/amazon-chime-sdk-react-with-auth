@@ -14,6 +14,8 @@ import {
   ZoomIn,
   ZoomOut,
   useContentShareState,
+  Record,
+  Pause,
 } from 'amazon-chime-sdk-component-library-react';
 
 import { useNavigation } from '../../providers/NavigationProvider';
@@ -24,11 +26,35 @@ import GalleryLayout from '../../components/icons/GalleryLayout';
 import FeaturedLayout from '../../components/icons/FeaturedLayout';
 import { useVideoTileGridControl } from '../../providers/VideoTileGridProvider';
 
+import { useState } from 'react';
+import {
+  startMeetingRecording,
+  stopMeetingRecording,
+} from '../../utils/api';
+
 const Navigation: React.FC = () => {
   const { toggleRoster, closeNavbar } = useNavigation();
-  const { theme, toggleTheme, layout, setLayout, priorityBasedPolicy } = useAppState();
+  const { theme, toggleTheme, layout, setLayout, priorityBasedPolicy, joinInfo, meetingId, token, isEchoReductionEnabled } = useAppState();
   const { sharingAttendeeId } = useContentShareState();
   const { zoomIn, zoomOut } = useVideoTileGridControl();
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaCapturePipeline, setMediaCapturePipeline] = useState('');
+
+  const startRecording = async () => {
+    setIsRecording(true);
+    const RecordingInfo = await startMeetingRecording(joinInfo!.Meeting.MeetingId, meetingId, token, isEchoReductionEnabled); // Despite its name, meetingId is actually ExternalMeetingId / Meeting Title. The real meeting ID is stored under JoinInfo.
+    if (RecordingInfo.MediaCapturePipeline) {
+      setMediaCapturePipeline(
+        RecordingInfo.MediaCapturePipeline.MediaPipelineId
+      );
+    }
+  };
+
+  const stopRecording = async () => {
+    setIsRecording(false);
+    await stopMeetingRecording(mediaCapturePipeline, meetingId, token, isEchoReductionEnabled);
+  };
 
   return (
     <Navbar className="nav" flexDirection="column" container>
@@ -74,6 +100,23 @@ const Navigation: React.FC = () => {
         }
       </Flex>
       <Flex marginTop="auto">
+        {isRecording ? (
+          <NavbarItem
+            icon={<Pause />}
+            onClick={() => {
+              stopRecording();
+            }}
+            label="Recording"
+          />
+        ) : (
+          <NavbarItem
+            icon={<Record />}
+            onClick={() => {
+              startRecording();
+            }}
+            label="Recording"
+          />
+        )}
         <NavbarItem
           icon={<Eye />}
           onClick={toggleTheme}

@@ -124,6 +124,26 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       KmsMasterKeyId: !Sub alias/ChimeKMS-${AWS::StackName}
+
+  BackendApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: LambdaTokenAuthorizer
+        Authorizers:
+          LambdaTokenAuthorizer:
+            FunctionArn: !GetAtt TokenAuthorizerLambda.Arn
+            FunctionPayloadType: TOKEN
+            Identity:
+              Header: X-AUTH-TOKEN
+          LambdaRequestAuthorizer:
+            FunctionArn: !GetAtt RequestAuthorizerLambda.Arn
+            FunctionPayloadType: REQUEST
+            Identity:
+              QueryStrings:
+              - token
+
   ChimeSdkIndexLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -135,11 +155,17 @@ Resources:
           Properties:
             Path: /
             Method: GET
+            RestApiId: !Ref BackendApi
+            Auth:
+              Authorizer: LambdaRequestAuthorizer
         ProxyApi:
           Type: Api
           Properties:
             Path: /{proxy+}
             Method: ANY
+            RestApiId: !Ref BackendApi
+            Auth:
+              Authorizer: LambdaRequestAuthorizer
   ChimeSdkCreateMeetingLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -157,6 +183,7 @@ Resources:
           Properties:
             Path: /meeting
             Method: POST
+            RestApiId: !Ref BackendApi
   ChimeSdkJoinLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -176,6 +203,7 @@ Resources:
           Properties:
             Path: /join
             Method: POST
+            RestApiId: !Ref BackendApi
   ChimeSdkEndLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -190,6 +218,7 @@ Resources:
           Properties:
             Path: /end
             Method: POST
+            RestApiId: !Ref BackendApi
   ChimeSdkAttendeeLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -206,6 +235,7 @@ Resources:
           Properties:
             Path: /attendee
             Method: GET
+            RestApiId: !Ref BackendApi
   ChimeSQSQueueLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -250,6 +280,9 @@ Resources:
           Properties:
             Path: /logs
             Method: POST
+            RestApiId: !Ref BackendApi
+            Auth:
+              Authorizer: NONE
   ChimeNotificationsQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
@@ -268,7 +301,226 @@ Resources:
         - Ref: MeetingNotificationsQueue
   ChimeBrowserLogs:
     Type: AWS::Logs::LogGroup
+  
+  MediaCaptureBucket:
+    Type: AWS::S3::Bucket
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub chimesdk-mediacapture-bucket-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+
+  MediaCaptureBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref MediaCaptureBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - 's3:*'
+            Effect: Deny
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref MediaCaptureBucket
+                - /*
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+            Principal: '*'
+          - Action:
+              - s3:PutObject
+              - s3:PutObjectAcl
+            Effect: Allow
+            Principal:
+              Service: chime.amazonaws.com
+            Resource:
+              - !GetAtt MediaCaptureBucket.Arn
+              - Fn::Join:
+                  - ''
+                  - - !GetAtt MediaCaptureBucket.Arn
+                    - /*
+            Sid: ChimeSDKMediaCaptureBucketPolicy
+
+  StartRecordingLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-AuthLambdaLogPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: '*'
+        - PolicyName: !Sub ${AWS::StackName}-MeetingLambdaChimePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'chime:createMediaCapturePipeline'
+                Resource: '*'
+        - PolicyName: !Sub ${AWS::StackName}-DynamoDbPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - dynamodb:GetItem
+                Effect: Allow
+                Resource:
+                  - !GetAtt Meetings.Arn
+        - PolicyName: !Sub ${AWS::StackName}-MediaCaptureS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject*
+                  - s3:GetBucket*
+                  - s3:List*
+                  - s3:DeleteObject*
+                  - s3:PutObject
+                  - s3:Abort*
+                Resource:
+                  - !GetAtt MediaCaptureBucket.Arn
+                  - !Join
+                    - ''
+                    - - !GetAtt MediaCaptureBucket.Arn
+                      - /*
+
+  StartMeetingRecordingApiFunction: # Adds a POST api endpoint at "/startrecord" to start meeting recording
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.startRecording
+      CodeUri: src/
+      Role: !GetAtt StartRecordingLambdaRole.Arn
+      Environment:
+        Variables:
+          MEDIA_CAPTURE_BUCKET: !Ref MediaCaptureBucket
+          ACCOUNT_ID: !Ref AWS::AccountId
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /startrecord
+            Method: POST
+            RestApiId: !Ref BackendApi
+
+  StopRecordingLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-AuthLambdaLogPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: '*'
+        - PolicyName: !Sub ${AWS::StackName}-MeetingLambdaChimePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'chime:deleteMediaCapturePipeline'
+                Resource: '*'
+        - PolicyName: !Sub ${AWS::StackName}-DynamoDbPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - dynamodb:GetItem
+                Effect: Allow
+                Resource:
+                  - !GetAtt Meetings.Arn
+
+  StopMeetingRecordingApiFunction: # Adds a POST api endpoint at "/stoprecord" to stop meeting recording
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.stopRecording
+      CodeUri: src/
+      Role: !GetAtt StopRecordingLambdaRole.Arn
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /stoprecord
+            Method: POST
+            RestApiId: !Ref BackendApi
+
+  AuthTokens:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: "token"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "token"
+          KeyType: HASH
+
+  RequestAuthorizerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: authorizers.requestAuthorizer
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AuthTokens
+      Environment:
+        Variables:
+          AUTH_TOKENS_TABLE_NAME: !Ref AuthTokens
+
+  TokenAuthorizerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: authorizers.tokenAuthorizer
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AuthTokens
+      Environment:
+        Variables:
+          AUTH_TOKENS_TABLE_NAME: !Ref AuthTokens
+      
 Outputs:
   ApiURL:
     Description: "API endpoint URL for Prod environment"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+    Value: !Sub "https://${BackendApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"

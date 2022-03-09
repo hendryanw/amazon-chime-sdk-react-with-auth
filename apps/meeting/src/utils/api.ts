@@ -11,6 +11,7 @@ export type MeetingFeatures = {
 
 export type CreateMeetingResponse = {
   MeetingFeatures: MeetingFeatures;
+  MeetingId: string;
 }
 
 export type JoinMeetingInfo = {
@@ -44,7 +45,7 @@ export async function fetchMeeting(
     method: 'POST',
     headers: {
       'X-AUTH-TOKEN': token,
-    }
+    },
   });
 
   const data = await res.json();
@@ -70,7 +71,7 @@ export async function getAttendee(
     method: 'GET',
     headers: {
       'X-AUTH-TOKEN': token,
-    }
+    },
   });
 
   if (!res.ok) {
@@ -93,7 +94,7 @@ export async function endMeeting(meetingId: string, token: string): Promise<void
     method: 'POST',
     headers: {
       'X-AUTH-TOKEN': token,
-    }
+    },
   });
 
   if (!res.ok) {
@@ -104,3 +105,55 @@ export async function endMeeting(meetingId: string, token: string): Promise<void
 export const createGetAttendeeCallback = (meetingId: string, token: string) =>
   (chimeAttendeeId: string): Promise<GetAttendeeResponse> =>
     getAttendee(meetingId, chimeAttendeeId, token);
+
+export async function startMeetingRecording(
+  meetingId: string, 
+  title: string,
+  token: string, 
+  echoReductionCapability = false) {
+  
+  const params = {
+    meetingId: encodeURIComponent(meetingId),
+    title: encodeURIComponent(title),
+    ns_es: String(echoReductionCapability),
+  };
+
+  const res = await fetch(BASE_URL + 'startrecord?' + new URLSearchParams(params), {
+    method: 'POST',
+    headers: {
+      'X-AUTH-TOKEN': token,
+    },
+  });
+  
+  const data = await res.json();
+
+  if (data.error) {
+    throw new Error(`Server error: ${data.error}`);
+  }
+
+  return data;
+}
+
+export async function stopMeetingRecording(
+  mediapipelineid: string,
+  title: string,
+  token: string,
+  echoReductionCapability = false) {
+
+  const params = {
+    title: encodeURIComponent(title),
+    mediapipelineid: encodeURIComponent(mediapipelineid),
+    ns_es: String(echoReductionCapability),
+  };
+
+  const res = await fetch(BASE_URL + 'stoprecord?' + new URLSearchParams(params), {
+    method: 'POST',
+    headers: {
+      'X-AUTH-TOKEN': token,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error('Server error stop recording');
+  }
+}

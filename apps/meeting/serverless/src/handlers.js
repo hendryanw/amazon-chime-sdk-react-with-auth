@@ -36,6 +36,8 @@ const attendeesTableName = process.env.ATTENDEES_TABLE_NAME;
 const sqsQueueArn = process.env.SQS_QUEUE_ARN;
 const provideQueueArn = process.env.USE_EVENT_BRIDGE === 'false';
 const logGroupName = process.env.BROWSER_LOG_GROUP_NAME;
+const mediaCaptureBucket = process.env.MEDIA_CAPTURE_BUCKET;
+const awsAccountId = process.env.ACCOUNT_ID;
 
 // Create a unique id
 function uuid() {
@@ -334,4 +336,71 @@ exports.logs = async (event, context) => {
     }
   }
   return response;
+};
+
+exports.startRecording = async (event) => {
+  console.log('trigger event: ' + JSON.stringify(event));
+  const meetingId = event.queryStringParameters.meetingId;
+  const title = event.queryStringParameters.title;
+
+  try {
+    const captureRequest = {
+      SourceType: 'ChimeSdkMeeting',
+      SourceArn: 'arn:aws:chime::' + awsAccountId + ':meeting:' + meetingId,
+      SinkType: 'S3Bucket',
+      SinkArn: 'arn:aws:s3:::' + mediaCaptureBucket + '/captures/' + title,
+    };
+    console.log(captureRequest);
+
+    let meetingInfo = await getMeeting(title);
+    const client = getClientForMeeting(meetingInfo, event.queryStringParameters.ns_es);
+    const captureInfo = await client
+      .createMediaCapturePipeline(captureRequest)
+      .promise();
+    console.log(captureInfo);
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify(captureInfo),
+      headers: {
+        'Access-Control-Allow-Headers': 'Authorization',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Credentials': 'true',
+      },
+    };
+    return response;
+  } catch (err) {
+    console.log(err);
+    return {
+      statusCode: 500,
+      body: 'Server error while starting recording.',
+    };
+  }
+};
+
+exports.stopRecording = async (event) => {
+  console.log('trigger event: ' + JSON.stringify(event));
+
+  const mediapipelineid = event.queryStringParameters.mediapipelineid;
+  const title = event.queryStringParameters.title;
+
+  let meetingInfo = await getMeeting(title);
+  const client = getClientForMeeting(meetingInfo, event.queryStringParameters.ns_es);
+
+  await client
+    .deleteMediaCapturePipeline({
+      MediaPipelineId: mediapipelineid,
+    })
+    .promise();
+
+  return {
+    statusCode: 200,
+    headers: {
+      'Access-Control-Allow-Headers': 'Authorization',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Credentials': 'true',
+    },
+    body: '',
+  };
 };
