@@ -1,11 +1,12 @@
 # Note
-This source is forked from https://github.com/aws-samples/amazon-chime-sdk to easily integrate with upstream quality changes.
+This repository is forked from https://github.com/aws-samples/amazon-chime-sdk. In this repository, you can find the modification and also added documentation in the [meeting application](https://github.com/hendryanw/amazon-chime-sdk-react-with-auth/tree/main/apps/meeting).
 
-In this forked repository, you can find the modification and also added documentation in the [meeting demo application](https://github.com/hendryanw/amazon-chime-sdk-react-with-auth/tree/main/apps/meeting)
-The modification allows the sample React Meeting Application to:
-1. Allow Meeting ID and Username to be supplied by the referral application using Querystrings `meetingid` and `username`
-2. Deployed into AWS Serverless with additional integration with API Gateway Lambda Authorizers to implement authorization with token stored in DynamoDB
-3. Allow the meeting to be recorded using Chime SDK Media Capture Pipeline
+The objective of the modification is to allow the meeting application to be embedded into existing web application without too much effort with additional features:
+1. Allow Meeting ID and Username to be supplied by the referral application using Querystrings `meetingid` and `username`. This allows the main web application to supply additional information that can be used during the meeting.
+2. Deployed into AWS Serverless with additional integration with API Gateway Lambda Authorizers to implement authorization with token stored in DynamoDB. This allows the meeting application to be protected with authorization, so that only users who is authorized by the main web application can join the meeting.
+3. Allow the meeting to be recorded using Chime SDK Media Capture Pipeline. This allows various use-cases such as watching the meeting on-demand after the meeting has ended.
+
+For more details, please refer to the README section of the [meeting application](https://github.com/hendryanw/amazon-chime-sdk-react-with-auth/tree/main/apps/meeting).
 
 ## Resources
 
