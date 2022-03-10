@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "API serverless:RequestAuthorizerLambda",
+      "invokeTarget": {
+        "target": "api",
+        "templatePath": "${workspaceFolder}/apps/meeting/serverless/template.yaml",
+        "logicalId": "RequestAuthorizerLambda"
+      },
+      "api": {
+        "path": "/",
+        "httpMethod": "get",
+        "payload": {
+          "json": {}
+        }
+      }
+    }
+  ]
+}

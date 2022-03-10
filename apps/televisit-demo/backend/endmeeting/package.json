@@ -1,5 +1,0 @@
-{
-  "name": "endmeeting",
-  "version": "1.0.0",
-  "description": "JavaScript implementation of API GW endpoint at /end to end the meeting"
-}
