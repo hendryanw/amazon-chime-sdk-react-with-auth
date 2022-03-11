@@ -48,7 +48,7 @@ function App() {
                   <Card.Body>
                     <Card.Title>Architecting Meeting Room</Card.Title>
                     <Card.Text>Learn to design highly available systems.</Card.Text>
-                    <Button variant="primary">Join Meeting</Button>
+                    <Button variant="primary" onClick={() => joinMeeting('architecting', user.username)}>Join Meeting</Button>
                   </Card.Body>
                 </Card>
               </CardGroup>
@@ -57,7 +57,7 @@ function App() {
                   <Card.Body>
                     <Card.Title>Machine Learning Meeting Room</Card.Title>
                     <Card.Text>Learn to integrate machine learning (ML) and artificial intelligence (AI) into tools and applications.</Card.Text>
-                    <Button variant="primary">Join Meeting</Button>
+                    <Button variant="primary" onClick={() => joinMeeting('machine-learning', user.username)}>Join Meeting</Button>
                   </Card.Body>
                 </Card>
               </CardGroup>  
