@@ -9,10 +9,25 @@ const { v4: uuidv4 } = require('uuid');
 const AWS = require('aws-sdk');
 /* eslint-enable */
 
+// Bucket for meeting recording storage. Modify it based on serverless deployment output.
+const mediaCaptureBucket = "chimesdk-mediacapture-bucket-545983628851"
+
 let hostname = '127.0.0.1';
 let port = 8080;
 let protocol = 'http';
 let options = {};
+let accountId;
+
+async function getAccountId() {
+  if (accountId) {
+    return accountId;
+  }
+
+  const sts = new AWS.STS();
+  const accountData = await sts.getCallerIdentity().promise();
+  accountId = accountData.Account;
+  return accountId;
+}
 
 const chime = new AWS.Chime({ region: 'us-east-1' });
 const alternateEndpoint = process.env.ENDPOINT;
@@ -164,6 +179,41 @@ const server = require(protocol).createServer(
             MeetingId: meetingCache[title].Meeting.MeetingId
           })
           .promise();
+        response.statusCode = 200;
+        response.end();
+      } else if (request.method === 'POST' && request.url.startsWith('/startrecord?')) {
+        const query = url.parse(request.url, true).query;
+        const meetingId = query.meetingId;
+        const title = query.title;
+
+        const client = getClientForMeeting(meetingCache[title]);
+        const captureRequest = {
+          SourceType: 'ChimeSdkMeeting',
+          SourceArn: 'arn:aws:chime::' + await getAccountId() + ':meeting:' + meetingId,
+          SinkType: 'S3Bucket',
+          SinkArn: 'arn:aws:s3:::' + mediaCaptureBucket + '/captures/' + title,
+        };
+        log(JSON.stringify(captureRequest));
+        const captureInfo = await client
+          .createMediaCapturePipeline(captureRequest)
+          .promise();
+        log(JSON.stringify(captureInfo));
+
+        response.statusCode = 200;
+        response.write(JSON.stringify(captureInfo), 'utf8');
+        response.end();
+      } else if (request.method === 'POST' && request.url.startsWith('/stoprecord?')) {
+        const query = url.parse(request.url, true).query;
+        const mediapipelineid = query.mediapipelineid;
+        const title = query.title;
+
+        const client = getClientForMeeting(meetingCache[title]);
+        await client
+          .deleteMediaCapturePipeline({
+            MediaPipelineId: mediapipelineid,
+          })
+          .promise();
+
         response.statusCode = 200;
         response.end();
       } else if (request.method === 'POST' && request.url.startsWith('/logs')) {

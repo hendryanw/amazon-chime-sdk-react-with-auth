@@ -521,6 +521,9 @@ Resources:
           AUTH_TOKENS_TABLE_NAME: !Ref AuthTokens
       
 Outputs:
+  MediaCaptureBucket:
+    Description: "Chime SDK Media Capture output bucket name"
+    Value: !Ref MediaCaptureBucket
   ApiURL:
     Description: "API endpoint URL for Prod environment"
     Value: !Sub "https://${BackendApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"

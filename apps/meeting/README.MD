@@ -14,6 +14,8 @@ This is the SDK react meeting demo app. It shows how to use the Amazon Chime SDK
 
 5. Supply `meetingid` and `username` in the querystrings to set the Chime SDK Meeting ID and the attendee name respectively. e.g. https://0.0.0.0:9000?meetingid=1234&username=john
 
+To try out meeting recording functionality locally, you will need an S3 bucket as the destination storage for the recording. You can either use existing S3 bucket or S3 bucket deployed in the deployment section below. Modify the `mediaCaptureBucket` in the `apps/meeting/server.js`.
+
 ## 2. Deploying it to AWS Serverless
 
 The following is the high-level architecture diagram that highlights the modification to includes authorization component.
