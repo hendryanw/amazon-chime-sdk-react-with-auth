@@ -107,6 +107,8 @@ The basic meeting recording functionality has been included using Chime SDK Medi
 
     Set `REACT_APP_CHIME_SDK_MEETING_URL` to the base URL of the API Gateway or API Gateway custom domain. Set `REACT_APP_CHIME_SDK_MEETING_TOKEN` to the available token in Auth Tokens table which you can create in DynamoDB console.
 
+    In real use-cases, these 2 variables should be returned by your server-side application.
+
 6. Start the React application locally using : `npm start` and open http://localhost:3000 in your browser.
 
 7. You can also test using the React application deployed to Amplify Hosting by checking at your Amplify App in the [Amplify Console](https://console.aws.amazon.com/amplify/).
