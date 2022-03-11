@@ -93,8 +93,23 @@ To setup the custom domain for the API Gateway, follow the steps outlined in the
 ## 5. Meeting Recording Functionality
 The basic meeting recording functionality has been included using Chime SDK Media Capture Pipeline. The meeting can be recorded by using the record button inside the meeting in the bottom left of the navigation panel. The recording can be found in the S3 bucket with name `chimesdk-mediacapture-bucket-[AccountID]`. At the moment the recording is segmented every 5 seconds, and will be able to be combined using additional tool that is to be included.
 
-## 6. Testing the authorization workflow using a sample website
-TODO
+## 6. Testing using a sample website
+
+1. If you haven't, [install and configure Amplify](https://docs.amplify.aws/start/getting-started/installation/q/integration/react/).
+
+2. In the root directory `apps/sample-web`, run `amplify init` and configure using a new environment.
+
+3. Run `npm install`
+
+4. Run `amplify push`. This will deploy Amplify Backend resources such as Cognito for authentication and also will deploy the frontend into Amplify hosting
+
+5. Configure environment variables in the `apps/sample-web/.env`
+
+    Set `REACT_APP_CHIME_SDK_MEETING_URL` to the base URL of the API Gateway or API Gateway custom domain. Set `REACT_APP_CHIME_SDK_MEETING_TOKEN` to the available token in Auth Tokens table which you can create in DynamoDB console.
+
+6. Start the React application locally using : `npm start` and open http://localhost:3000 in your browser.
+
+7. You can also test using the React application deployed to Amplify Hosting by checking at your Amplify App in the [Amplify Console](https://console.aws.amazon.com/amplify/).
 
 ## 7. Troubleshooting
 
