@@ -116,6 +116,24 @@ function getNotificationsConfig() {
   return {}
 }
 
+const checkIfMeetingExists = async (client, meetingId) => {
+  console.info('Checking if meeting still exists.');
+  try {
+    const existingMeeting = await client.getMeeting({
+      MeetingId: meetingId
+    }).promise();
+    console.log(JSON.stringify(existingMeeting));
+    return existingMeeting;
+  } catch (err) {
+    console.log(JSON.stringify(err));
+    if (err.statusCode === 404) {
+      return undefined;
+    } else {
+      throw err;
+    }
+  }
+}
+
 exports.createMeeting = async (event, context, callback) => {
   var response = {
     "statusCode": 200,
@@ -186,7 +204,8 @@ exports.join = async (event, context, callback) => {
 
   let meetingInfo = await getMeeting(title);
   const client = getClientForMeeting(meetingInfo, event.queryStringParameters.ns_es);
-  if (!meetingInfo) {
+  const existingMeeting = await checkIfMeetingExists(client, meetingInfo.Meeting.MeetingId);
+  if (!meetingInfo || !existingMeeting) {
     const request = {
       ClientRequestToken: uuid(),
       MediaRegion: region,
