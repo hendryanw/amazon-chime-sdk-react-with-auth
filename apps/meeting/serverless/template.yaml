@@ -519,7 +519,95 @@ Resources:
       Environment:
         Variables:
           AUTH_TOKENS_TABLE_NAME: !Ref AuthTokens
-      
+
+  RecordingProcessorLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-AuthLambdaLogPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource: '*'
+        - PolicyName: !Sub ${AWS::StackName}-DynamoDbPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                Effect: Allow
+                Resource:
+                  - !GetAtt Attendees.Arn
+        - PolicyName: !Sub ${AWS::StackName}-MediaCaptureS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject*
+                  - s3:GetBucket*
+                  - s3:List*
+                  - s3:DeleteObject*
+                  - s3:PutObject
+                  - s3:Abort*
+                Resource:
+                  - !GetAtt MediaCaptureBucket.Arn
+                  - !Join
+                    - ''
+                    - - !GetAtt MediaCaptureBucket.Arn
+                      - /*
+
+  ffmpeglambdalayer:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:145266761615:applications/ffmpeg-lambda-layer
+        SemanticVersion: 1.0.0
+
+  RecordingProcessorLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: recording-processor.handler
+      Runtime: python3.9
+      MemorySize: 10240
+      Timeout: 900
+      CodeUri: src/
+      Layers:
+      - !GetAtt ffmpeglambdalayer.Outputs.LayerVersion
+      Role: !GetAtt RecordingProcessorLambdaRole.Arn
+      Environment:
+        Variables:
+          ATTENDEES_TABLE_NAME: !Ref Attendees
+          MEDIA_CAPTURE_BUCKET: !Ref MediaCaptureBucket
+      Events:
+        ChimeSdkEvents:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: default
+            Pattern: {
+              "detail-type": ["Chime Media Pipeline State Change"],
+              "source": ["aws.chime"],
+              "detail": {
+                "eventType": ["chime:MediaPipelineDeleted"]
+              }
+            }
+          
 Outputs:
   MediaCaptureBucket:
     Description: "Chime SDK Media Capture output bucket name"

@@ -164,7 +164,7 @@ spawnOrFail('sam', [
   '--parameter-overrides',
   `UseEventBridge=${useEventBridge}`,
   '--capabilities',
-  'CAPABILITY_IAM',
+  'CAPABILITY_IAM CAPABILITY_AUTO_EXPAND',
   '--region',
   `${region}`,
   '--no-fail-on-empty-changeset'
