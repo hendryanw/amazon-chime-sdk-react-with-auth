@@ -204,7 +204,12 @@ exports.join = async (event, context, callback) => {
 
   let meetingInfo = await getMeeting(title);
   const client = getClientForMeeting(meetingInfo, event.queryStringParameters.ns_es);
-  const existingMeeting = await checkIfMeetingExists(client, meetingInfo.Meeting.MeetingId);
+
+  let existingMeeting;
+  if (meetingInfo) {
+     existingMeeting = await checkIfMeetingExists(client, meetingInfo.Meeting.MeetingId);
+  }
+
   if (!meetingInfo || !existingMeeting) {
     const request = {
       ClientRequestToken: uuid(),
