@@ -22,21 +22,6 @@ ___
 
 ## 2. Deploying it to AWS Serverless
 
-The following is the high-level architecture diagram that highlights the modification to includes authorization component.
-
-![Meeting Architecture Diagram](/apps/meeting/overview-architecture-diagram.jpg)
-
-1. Users authenticate with main web app and access the web page for the meeting
-2. The main web app creates the meeting link with the necessary information such as users, meeting id, and authorization token in the query strings. The authorization token is stored in DynamoDB along with other information such as meeting id, roles, validity time, etc as per business requirements.
-3. Users clicked on the button that contains hyperlink e.g. `meeting.example.com?meetingid=1234&username=john&token=abcdefg`
-4. Users is pointed to the meeting service at meeting.example.com. The request is accepted by API Gateway
-5. API Gateway accepted the request and then invoked Lambda Authorizer to verify the token. Lambda Authorizer logic can be customized to verify whether the token exists in the Authorization Token Table.
-And also verify whether the token is still valid within the time period, etc.
-6. Lambda Function Index Page returns the initial response containing the React application
-7. React Application will call various API in the meeting service such as create meeting, join, end, etc.
-
-___
-
 ### Install aws and sam command line tools
 
 - [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv1.html)
