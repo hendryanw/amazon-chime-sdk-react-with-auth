@@ -27,7 +27,7 @@ function App() {
                   Hello {user.username}!
                 </Nav.Link>
               </Nav.Item>
-                <Button variant="warning">Sign Out</Button>
+                <Button variant="warning" onClick={signOut}>Sign Out</Button>
               </Navbar.Collapse>
             </Container>
           </Navbar>
