@@ -15,7 +15,7 @@ import {
   ZoomOut,
   useContentShareState,
   Record,
-  Pause,
+  Remove,
 } from 'amazon-chime-sdk-component-library-react';
 
 import { useNavigation } from '../../providers/NavigationProvider';
@@ -102,11 +102,13 @@ const Navigation: React.FC = () => {
       <Flex marginTop="auto">
         {isRecording ? (
           <NavbarItem
-            icon={<Pause />}
+            icon={<Remove />}
             onClick={() => {
               stopRecording();
             }}
-            label="Recording"
+            showLabel={true}
+            css="color:white;background-color:red;"
+            label="Stop Recording"
           />
         ) : (
           <NavbarItem
@@ -114,7 +116,8 @@ const Navigation: React.FC = () => {
             onClick={() => {
               startRecording();
             }}
-            label="Recording"
+            showLabel={true}
+            label="Start Recording"
           />
         )}
         <NavbarItem
